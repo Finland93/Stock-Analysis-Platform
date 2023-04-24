@@ -17,6 +17,20 @@ Download this as .zip file, extract every file and make these edits before you u
 
 # What this platform does?
 
+This platform will fetch NYSE and NASDAQ stocks from Alphavantage, it will also add these symbols inside 2 separated databases. When you have imported every symbol to these two databases you can start fetching: Sectors, Market Capitalization, P/E ratios, P/B ratios, RSI and Earnings per share for every stock symbol you have on your tables. 
+
+This platform also has USA economics GDP & Inflation data from alphavantage, i would recomend you also to add CPI, Federal Funds rate and unemployment rate to give more accurate data for economic state of USA. Here is URLs: 
+- https://www.alphavantage.co/documentation/#interest-rate 
+- https://www.alphavantage.co/documentation/#unemployment
+- https://www.alphavantage.co/documentation/#cpi
+
+When this platform creates tables to public website it will also include 2 buttons on tables: News for latest 6 news of current stock and chart for last 100 datapoints, this will also make Fibonacci lines to charts.
+
+You can also calculate sector averages for each exhange and sector for: P/E, P/B and RSI and when users will click "display" button this platform will look sector averages and swap numbers to images: SELL | BUY | HOLD based on sector average values.
+
+# PRO User improvements
+- For PRO users you should edit this platform to display everything, and disable some features from free users
+- Alphavantage offers Search feature, this would be good to add for PRO users to fetch different symbols whit same data to separated table when they have PRO role here is reference for this: https://www.alphavantage.co/documentation/#symbolsearch
 
 # Libraries
 - Alphavantage API
@@ -27,3 +41,8 @@ Download this as .zip file, extract every file and make these edits before you u
 - Jquery
 - Luxon
 
+# Know issues
+- Chart.js for stocks will not have correct amount of datapoints for fibonacci or Candle sticks it will display first and last on charts. 
+- Economics of USA will display only GDP data, this issue is releated to chart.js and you need to look why it wont make these charts as separated.
+
+**Here on read me file is also some improvements & ideas what to do next for this platform, if you like this code and want to make this better please feel free to contact me here on github**
