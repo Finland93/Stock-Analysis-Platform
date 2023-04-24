@@ -18,10 +18,11 @@ Download this as .zip file, extract every file and make these edits before you u
 
 
 # Libraries
-- Recaptcha
 - Alphavantage API
+- FontAwesome
+- Bootstrap
+- Recaptcha
 - Chart.js
 - Jquery
-- FontAwesome
 - Luxon
-- Bootstrap
+
