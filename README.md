@@ -32,7 +32,8 @@ When this platform creates tables to a public website it will also include 2 but
 You can also calculate sector averages for each exchange and sector for: P/E, P/B and RSI and when users will click "display" button this platform will look sector averages and swap numbers to images: SELL | BUY | HOLD based on sector average values.
 
 # PRO User improvements
-For PRO users you should edit this platform to display everything, and disable some features from free usersAlpha Vantage offers Search feature, this would be good to add for PRO users to fetch different symbols with same data to separated table when they have PRO role here is reference for this: https://www.alphavantage.co/documentation/#symbolsearch
+For PRO users you should edit this platform to display everything, and disable some features from free users
+Alpha Vantage offers Search feature, this would be good to add for PRO users to fetch different symbols with same data to separated table when they have PRO role here is reference for this: https://www.alphavantage.co/documentation/#symbolsearch
 
 # How to improve this?
 - Blog post should be done with tinyMCE and database from admin panel
