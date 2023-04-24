@@ -2,7 +2,8 @@
 **DISCLAIMER:** This project is "work in progress" and its not 100% working platform, you need to make some editing if you want to use this platform. 
 
 # Install.php & Installation
-Download this as .zip file, extract every file and make these edits before you upload this to your server. 
+Download this as .zip file, extract every file and make these edits before you upload this to your server. This platform will make config file outside of public directory, you need to install this using install.php file this will make all nessesary tables to database.
+
 - Rename Admin folder, also rename login.php file and edit index.php file redirection to login whit correct details
 - Check APP folder files: Verification.php, reset-password.php, register.php, form-handler.php, delete-profile.php for email adresses and also google recaptcha keys and verification URL`s
 - Check FETCH folder files for hard coded alphavantage API keys
