@@ -1,6 +1,8 @@
 # TrendTonic - Stock analysis using Alphavantage API 
 **DISCLAIMER:** This project is "work in progress" and its not 100% working platform, you need to make some editing if you want to use this platform. Do you want to see this platform in action? You can find this here: https://trend-tonic.com 
 
+This project have also included: FAQ with schemas on frontpage, image swap from PNG/JPG files to webP files
+
 # Install.php & Installation
 Download this as .zip file, extract every file and make these edits before you upload this to your server. This platform will make config file outside of public directory, you need to install this using install.php file this will make all nessesary tables to database.
 
