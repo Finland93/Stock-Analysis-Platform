@@ -37,6 +37,12 @@ You can also calculate sector averages for each exhange and sector for: P/E, P/B
 - For PRO users you should edit this platform to display everything, and disable some features from free users
 - Alphavantage offers Search feature, this would be good to add for PRO users to fetch different symbols whit same data to separated table when they have PRO role here is reference for this: https://www.alphavantage.co/documentation/#symbolsearch
 
+# How to improve this?
+- Blog post should be done with tinyMCE and database from admin panel
+- User management on the admin side
+- Payment gateway from stripe
+- Cronjobs to automate data fetching when exhanges closes, now this is done manually
+
 # Libraries
 - Alphavantage API
 - FontAwesome
