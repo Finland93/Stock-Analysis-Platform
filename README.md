@@ -10,10 +10,10 @@ Download this as .zip file, extract every file and make these edits before you u
 - Make sure you have Google Recaptcha and Alphavantage premium API key, this platform wont work whitout these! You need also Mysql database to install this project
 - Make your own static content for all page files, this platform includes free stock images for candlestick cheat sheet
 - Make sure you have your own noreply email added to install.php file for sending admin user details
-- **Double check every single file before you download this to public server**
 - Write your disclaimers for every page, write terms & conditions and also privacy policy
 - Edit your own Google Analytics for every page
 - Edit blog and add some posts if you like to have blog whit this platform
+- **Double check every single file before you download this to public server**
 
 # Security
 **This project is unfinished for security hardening, you need to make sure this platform is secure before your launch this as public website.**
