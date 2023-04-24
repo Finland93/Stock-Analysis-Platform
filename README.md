@@ -12,7 +12,7 @@ Download this as .zip file, extract every file and make these edits before you u
 - **Double check every single file before you download this to public server **
 
 # Security
-**This project is unfinished for security hardening, you need to make sure this platform is secure before your launch this as public website. **
+**This project is unfinished for security hardening, you need to make sure this platform is secure before your launch this as public website.**
 
 # What this platform does?
 
