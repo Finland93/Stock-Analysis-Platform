@@ -9,7 +9,7 @@ Download this as .zip file, extract every file and make these edits before you u
 - Check FETCH folder files for hard coded alphavantage API keys
 - Make sure you have Google Recaptcha and Alphavantage premium API key, this platform wont work whitout these! You need also Mysql database to install this project
 - Make your own static content for all page files, this platform includes free stock images for candlestick cheat sheet
-- Make sure you have your own domain added to install.php file for sending admin user details
+- Make sure you have your own noreply email added to install.php file for sending admin user details
 - **Double check every single file before you download this to public server**
 
 # Security
