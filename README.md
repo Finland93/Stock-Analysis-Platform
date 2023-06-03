@@ -1,5 +1,5 @@
 # TrendTonic - Stock analysis using Alpha Vantage API
-**DISCLAIMER:** This project is "work in progress" and its not 100% working platform, you need to make some editing if you want to use this platform. Do you want to see this platform in action? You can find this here: https://trend-tonic.com
+**DISCLAIMER:** This project is "work in progress" and its not 100% working platform, you need to make some editing if you want to use this platform. 
 
 This project also included: FAQ with schemas on frontpage, image swap from PNG/JPG files to webP files
 
