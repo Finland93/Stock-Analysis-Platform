@@ -33,7 +33,7 @@ To contribute to TrendTonic, please follow these steps:
 
 ## Code of Conduct
 
-We value a respectful and inclusive community. Therefore, we ask all contributors to abide by our [Code of Conduct]. By participating in this project, you agree to follow the guidelines outlined in the code of conduct.
+We value a respectful and inclusive community. Therefore, we ask all contributors to abide by our [Code of Conduct](https://github.com/Finland93/Stock-Analysis-Platform/blob/main/CODE_OF_CONDUCT.md). By participating in this project, you agree to follow the guidelines outlined in the code of conduct.
 
 ## License
 
