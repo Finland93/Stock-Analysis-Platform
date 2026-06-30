@@ -1,6 +1,6 @@
 <?php 
 function getInflationData() {
-    require_once '../app/db-config.php';
+    require '../app/db-config.php';   // 'require' (not require_once) so each call re-loads the credentials
     // Connect to database
     $conn = mysqli_connect($db_host, $db_username, $db_password, $db_name);
     // Get the data from the database
@@ -45,18 +45,12 @@ function generateInflationChartHtml() {
         data: inflationData,
         options: {
             scales: {
-                yAxes: [{
-                    scaleLabel: {
-                        display: true,
-                        labelString: 'Percentage'
-                    }
-                }],
-                xAxes: [{
-                    scaleLabel: {
-                        display: true,
-                        labelString: 'Date'
-                    }
-                }]
+                y: {
+                    title: { display: true, text: 'Percentage' }
+                },
+                x: {
+                    title: { display: true, text: 'Date' }
+                }
             }
         }
     });

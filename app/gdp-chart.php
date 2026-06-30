@@ -1,7 +1,7 @@
 <?php
 
 function getGdpData() {
-    require_once '../app/db-config.php';
+    require '../app/db-config.php';   // 'require' (not require_once) so each call re-loads the credentials
 
     // Connect to database
     $conn = mysqli_connect($db_host, $db_username, $db_password, $db_name);
@@ -47,22 +47,14 @@ function generateGdpChartHtml() {
 		data: gdpData,
 		options: {
 			scales: {
-				yAxes: [{
-					ticks: {
-						min: 3000,
-						beginAtZero: false
-					},
-					scaleLabel: {
-						display: true,
-						labelString: 'Billions of dollars'
-					}
-				}],
-				xAxes: [{
-					scaleLabel: {
-						display: true,
-						labelString: 'Date'
-					}
-				}]
+				y: {
+					min: 3000,
+					beginAtZero: false,
+					title: { display: true, text: 'Billions of dollars' }
+				},
+				x: {
+					title: { display: true, text: 'Date' }
+				}
 			}
 		}
 	});
