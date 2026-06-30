@@ -1,5 +1,8 @@
 <?php
-session_start();
+// Load config + shared helpers (secure_session, csrf_token, e).
+require_once 'app/db-config.php';
+secure_session();
+$csrf_token = csrf_token();
 ?>
 
 <!DOCTYPE html>
@@ -79,6 +82,7 @@ session_start();
  <!-- Register form --> 	
 	<div class="disableRegister" style="display: none;">
   <form action="app/register.php" method="post" id="registerForm" >
+    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
     <div class="form-group">
       <label for="full_name">Full Name:</label>
       <input type="text" class="form-control" id="full_name" name="full_name" required>
@@ -114,6 +118,7 @@ session_start();
  <!-- Login form --> 
   <div class="disableLogin" style="display: none;">
   <form action="app/login.php" method="post" id="loginForm">
+    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
     <div class="form-group">
       <label for="email">Email:</label>
       <input type="email" class="form-control" id="email" name="email" required>
@@ -121,8 +126,7 @@ session_start();
     <div class="form-group">
       <label for="password">Password:</label>
       <input type="password" class="form-control" id="password" name="password" required>
-	  <input type="hidden" name="user_token" value="<?php echo $_SESSION['user_token']; ?>">
-    </div>
+	      </div>
     <input type="submit" name="submit" value="Submit">
     <a href="#" id="lostPassword">Lost your password?</a>
   </form>
@@ -131,6 +135,7 @@ session_start();
 <!-- Lost Password -->
 <div class="disableLostPassword" style="display: none;">
   <form action="app/reset-password.php" method="post" id="resetPasswordForm">
+    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
       <label for="resetEmail">Email:</label>
       <input type="email" class="form-control" id="resetEmail" name="resetEmail">
     <input type="submit" name="submit" value="Reset Password">
