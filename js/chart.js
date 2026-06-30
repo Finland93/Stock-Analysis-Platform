@@ -1,4 +1,4 @@
-var apiKey = "<?php include '../app/db-config.php'; echo $av_api_key; ?>";
+// Requests go through app/api-proxy.php so the API key stays server-side.
 var modal = document.getElementById("chart-modal");
 var symbol, StockName, apiKey;
 var btn = document.querySelectorAll(".symbol-button");
@@ -51,7 +51,7 @@ window.onclick = function(event) {
 };
 
 async function fetchData(barData) {
-  var url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=${symbol}&outputsize=compact&apikey=${apiKey}`;
+  var url = `app/api-proxy.php?type=chart&symbol=${encodeURIComponent(symbol)}`;
 
   try {
     const response = await fetch(url);

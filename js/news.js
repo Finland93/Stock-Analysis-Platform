@@ -1,4 +1,4 @@
-var apiKey = "<?php include '../app/db-config.php'; echo $av_api_key; ?>";
+// Requests go through app/api-proxy.php so the API key stays server-side.
 var newsModal = document.querySelector("#news-modal");
 var closeBtn = document.querySelector(".close-btn");
 var newsList = document.querySelector("#news-list");
@@ -26,7 +26,7 @@ window.addEventListener("click", function(event) {
 
 
 async function fetchNews(symbol) {
-  const response = await fetch(`https://www.alphavantage.co/query?function=NEWS_SENTIMENT&tickers=${symbol}&apikey=${apiKey}`);
+  const response = await fetch(`app/api-proxy.php?type=news&symbol=${encodeURIComponent(symbol)}`);
   const data = await response.json();
   if (!data.hasOwnProperty("feed")) {
     console.error("Data does not have a 'feed' property");
