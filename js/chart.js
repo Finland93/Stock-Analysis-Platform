@@ -57,10 +57,13 @@ async function fetchData(barData) {
     const response = await fetch(url);
     const data = await response.json();
     var timeSeries = data["Time Series (Daily)"];
+    if (!timeSeries) { return; }
+    // Alpha Vantage returns newest-first; charts need oldest-first order
+    var __dates = Object.keys(timeSeries).sort(function(a, b) { return new Date(a) - new Date(b); });
 
 var high = -Infinity;
 var low = Infinity;
-for (var date in timeSeries) {
+for (var date of __dates) {
   var prices = timeSeries[date];
   var bar = {
     x: new Date(date).valueOf(),
@@ -79,7 +82,7 @@ for (var i = 0; i < retracementLevels.length; i++) {
   var level = retracementLevels[i];
   var retracement = low + (high - low) * level;
   var fibDataForLevel = [];
-  for (var date in timeSeries) {
+  for (var date of __dates) {
     var fibPoint = {
       x: new Date(date).valueOf(),
       y: retracement
@@ -124,90 +127,43 @@ function createChart(ctx, barData, fibData, closingPrices) {
     options: {
       responsive: true,
       maintainAspectRatio: true,
-      tooltips: {
-        mode: 'index',
-        intersect: false,
-        backgroundColor: 'rgba(255, 255, 255, 1)',
-        titleFontColor: 'white',
-        bodyFontColor: 'white',
-        callbacks: {
-          label: function(tooltipItem, data) {
-            var label = data.datasets[tooltipItem.datasetIndex].label || '';
-            label += ' ' + tooltipItem.yLabel.toFixed(2);
-            return label;
+      plugins: {
+        legend: {
+          display: true,
+          labels: { color: 'white' }
+        },
+        tooltip: {
+          mode: 'index',
+          intersect: false,
+          callbacks: {
+            label: function(ctx) {
+              var label = ctx.dataset.label || '';
+              var y = (ctx.parsed && typeof ctx.parsed.y === 'number') ? ctx.parsed.y : null;
+              return y === null ? label : (label + ' ' + y.toFixed(2));
+            }
           }
-        }
-      },
-      hover: {
-        mode: 'nearest',
-        intersect: false
-      },
-      legend: {
-        display: true,
-        labels: {
-          fontColor: 'white'
         }
       },
       scales: {
-        xAxes: [{
+        x: {
           type: 'time',
-          time: {
-            unit: 'day'
-          },
-          gridLines: {
-            color: 'rgba(255, 255, 255, 1)'
-          },
-          ticks: {
-            fontColor: 'white',
-            autoSkip: true,
-            maxTicksLimit: 10
-          }
-        }],
-        yAxes: [{
+          time: { unit: 'day' },
+          grid: { color: 'rgba(255, 255, 255, 1)' },
+          ticks: { color: 'white', autoSkip: true, maxTicksLimit: 10 }
+        },
+        y: {
           display: true,
-          scaleLabel: {
-            display: true,
-            labelString: 'Price',
-            fontColor: 'white'
-          },
-          gridLines: {
-            color: 'rgba(255, 255, 255, 1)'
-          },
-          ticks: {fontColor: 'white',
-		  callback: function(value, index, values) {
-          return value.toFixed(2);
-		  }
-		}
-	}]
-	},
-		pan: {
-		enabled: true,
-		mode: 'xy',
-		speed: 10,
-		threshold: 10
-		},
-		zoom: {
-		enabled: true,
-		drag: true,
-		mode: 'xy',
-		limits: {
-		max: 10,
-		min: 0.5
-		}
-	},
-	layout: {
-		padding: {
-		left: 0,
-		right: 0,
-		top: 5,
-		bottom: 5
-		}
-	},
-	elements: {
-		rectangle: {
-		backgroundColor: 'rgba(255, 255, 255, 1)'
-		}
-	}
-	}
-});
+          title: { display: true, text: 'Price', color: 'white' },
+          grid: { color: 'rgba(255, 255, 255, 1)' },
+          ticks: {
+            color: 'white',
+            callback: function(value) { return Number(value).toFixed(2); }
+          }
+        }
+      },
+      layout: {
+        padding: { left: 0, right: 0, top: 5, bottom: 5 }
+      }
+    }
+  });
 }
