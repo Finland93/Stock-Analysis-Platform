@@ -1,24 +1,20 @@
 <?php
-// Start the session
-session_start();
+require_once '../../app/db-config.php';   // DB credentials + shared helpers
+secure_session();
 
-// Check if the user is logged in and has a valid CSRF token
+// Require an authenticated admin
 if (!isset($_SESSION['admin_user']) || !$_SESSION['admin_user'] || !isset($_SESSION['admin_token'])) {
-    // The user is not logged in or has an invalid CSRF token, redirect them to the login page
     header('Location: login.php');
     exit;
 }
 
-// Check if the logout button has been pressed
+// Logout
 if (isset($_POST['logout'])) {
-    // Destroy the session
+    $_SESSION = array();
     session_destroy();
-
-    // Redirect the user to the login page
     header('Location: login.php');
     exit;
 }
-require_once '../../app/db-config.php';
 ?>
 <!DOCTYPE html>
 <html lang="en-US">
@@ -66,7 +62,7 @@ require_once '../../app/db-config.php';
 		<!-- Admin Main Page -->
 		<div id="main">    
 			<h2>Admin home Page</h2>
-			<p>Welcome, <?php echo $_SESSION['username']; ?>!</p>
+			<p>Welcome, <?php echo e($_SESSION['username']); ?>!</p>
 		<div id="progress-bar" style="display:none;">
 			<progress value="0" max="100"></progress>
 		</div>
@@ -112,10 +108,10 @@ require_once '../../app/db-config.php';
 					<p>
 					<?php
 						// Connect to database
-						$conn = mysqli_connect($db_host, $db_username, $db_password, $db_name);
+						$conn = db();
 						// Check connection
 						if (!$conn) {
-							die("Connection failed: " . mysqli_connect_error());
+							error_log('Stock platform admin count: connection failed');
 						}
 						// Get the number of stocks in the NYSE table
 						$select_data = "SELECT COUNT(*) as count FROM NYSE";
@@ -124,7 +120,7 @@ require_once '../../app/db-config.php';
 						// Display the number of stocks
 						echo $row['count'];
 						// Close database connection
-						mysqli_close($conn);
+						// connection reused across blocks; closed at end of request
 					?>
 					</p>
 				</div>
@@ -136,11 +132,11 @@ require_once '../../app/db-config.php';
 					<p>
 					<?php
 						// Connect to database
-						$conn = mysqli_connect($db_host, $db_username, $db_password, $db_name);
+						$conn = db();
 
 						// Check connection
 						if (!$conn) {
-							die("Connection failed: " . mysqli_connect_error());
+							error_log('Stock platform admin count: connection failed');
 						}
 						// Get the number of stocks in the NASDAQ table
 						$select_data = "SELECT COUNT(*) as count FROM NASDAQ";
@@ -149,7 +145,7 @@ require_once '../../app/db-config.php';
 						// Display the number of stocks
 						echo $row['count'];
 						// Close database connection
-						mysqli_close($conn);
+						// connection reused across blocks; closed at end of request
 					?>
 					</p>
 				</div>

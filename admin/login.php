@@ -1,70 +1,71 @@
 <?php
-session_start();
-//Limit login attempts
 require_once '../app/limit-logins.php';
-// Connect to the database
-include '../../app/db-config.php';
+require_once '../../app/db-config.php';   // DB credentials + shared helpers
+secure_session();
+
 $conn = mysqli_connect($db_host, $db_username, $db_password, $db_name);
 if (!$conn) {
-    die("Error connecting to the database: " . mysqli_connect_error());
+    error_log('Stock platform admin-login: DB connection failed: ' . mysqli_connect_error());
+    die('A database error occurred. Please try again later.');
 }
 
-// Check if the form has been submitted
-if (isset($_POST['submit'])) {
-    // Verify the reCAPTCHA v3 response
-    $secret_key = "RECAPTCHA SECRET KEY HERE";
-    $response = file_get_contents("https://www.google.com/recaptcha/api/siteverify?secret=".$secret_key."&response=".$_POST['g-recaptcha-response']);
-    $response = json_decode($response, true);
-    if ($response["success"] === true) {
-        // Retrieve form data
-        $username = $_POST['username'];
-        $password = $_POST['password'];
-		$hashed_password = password_hash($password, PASSWORD_DEFAULT);
+$error_message = '';
 
-        // Validate form data
-        if (!$username || !$password) {
-            $error_message = "All fields are required. Please fill out the form.";
+if (isset($_POST['submit'])) {
+    if (!csrf_verify($_POST['csrf_token'] ?? '')) {
+        $error_message = 'Invalid or expired request. Please reload the page and try again.';
+    } else {
+        // reCAPTCHA v3 (only enforced if a real secret key is configured)
+        $secret_key = isset($recaptcha_secret_key) ? $recaptcha_secret_key : '';
+        $captcha_ok = true;
+        if ($secret_key !== '' && stripos($secret_key, 'HERE') === false) {
+            $resp   = $_POST['g-recaptcha-response'] ?? '';
+            $verify = @file_get_contents('https://www.google.com/recaptcha/api/siteverify?secret=' . urlencode($secret_key) . '&response=' . urlencode($resp));
+            $verify = json_decode($verify, true);
+            $captcha_ok = !empty($verify['success']);
+        }
+
+        if (!$captcha_ok) {
+            $error_message = 'reCAPTCHA verification failed.';
         } else {
-            // Check if the entered credentials match with the ones stored in the database
-            $query = "SELECT * FROM admin_details WHERE username = ?";
-            $stmt = mysqli_prepare($conn, $query);
-            mysqli_stmt_bind_param($stmt, "s", $username);
-            mysqli_stmt_execute($stmt);
-            $result = mysqli_stmt_get_result($stmt);
-            if (mysqli_num_rows($result) > 0) {
-                // The username exists in the database
-                $admin = mysqli_fetch_assoc($result);
-                if (password_verify($password, $hashed_password)) {
-                    // The entered password matches with the stored hashed password
-                    if ($admin['role'] === "Admin") {
-                        // The user has the "Admin" role, allow them access to the admin page
-                        session_start();
-                        $_SESSION['admin_user'] = true;
-                        $_SESSION['username'] = $username;
-                        // Generate the token
-                        if (!isset($_SESSION['admin_token'])) {
-                            $_SESSION['admin_token'] = bin2hex(random_bytes(32));
-                        }
-                        header('Location: index.php');
-                        exit;
-                    } else {
-                        // The user doesn't have the "Admin" role, show an error message
-                        $error_message = "You don't have permission to access the admin page.";
-                    }
-                } else {
-                    // The entered password doesn't match with the stored hashed password, show an error message
-                    $error_message = "Incorrect username or password.";
-                }
+            $username = trim((string) ($_POST['username'] ?? ''));
+            $password = (string) ($_POST['password'] ?? '');
+
+            if ($username === '' || $password === '') {
+                $error_message = 'All fields are required. Please fill out the form.';
+            } elseif (checkLoginAttempts($username)) {
+                $error_message = 'Too many attempts. Please try again later.';
             } else {
-                // The username doesn't exist in the database, show an error message
-                $error_message = "Incorrect username or password.";
+                $stmt = mysqli_prepare($conn, 'SELECT password, role FROM admin_details WHERE username = ? LIMIT 1');
+                mysqli_stmt_bind_param($stmt, 's', $username);
+                mysqli_stmt_execute($stmt);
+                $result = mysqli_stmt_get_result($stmt);
+                $admin  = $result ? mysqli_fetch_assoc($result) : null;
+                mysqli_stmt_close($stmt);
+
+                // Verify the ENTERED password against the STORED hash.
+                // (The original hashed the entered password and compared it to
+                // itself, so ANY password was accepted - a full auth bypass.)
+                if ($admin && password_verify($password, $admin['password']) && $admin['role'] === 'Admin') {
+                    session_regenerate_id(true);
+                    resetLoginAttempts($username);
+                    $_SESSION['admin_user'] = true;
+                    $_SESSION['username']   = $username;
+                    if (!isset($_SESSION['admin_token'])) {
+                        $_SESSION['admin_token'] = bin2hex(random_bytes(32));
+                    }
+                    mysqli_close($conn);
+                    header('Location: index.php');
+                    exit;
+                } else {
+                    updateLoginAttempts($username);
+                    $error_message = 'Incorrect username or password.';
+                }
             }
         }
     }
 }
-// Close the database connection
 mysqli_close($conn);
-
 ?>
 
 <!DOCTYPE html>
@@ -108,15 +109,15 @@ mysqli_close($conn);
   <!-- Use col-md-8 + col-md-4 for sidebar, use col-md-12 without sidebar -->
     <div class="col-md-12">
     <h1>TrendTonic - Admin Login</h1>
-    <?php if (isset($error_message)): ?>
-    <p style="color: red;"><?php echo $error_message; ?></p>
+    <?php if (!empty($error_message)): ?>
+    <p style="color: red;"><?php echo e($error_message); ?></p>
     <?php endif; ?>
     <form action="" method="post">
 	<label for="username">Username:</label>
-	<input type="text" id="username" name="username" value="<?php echo isset($_POST['username']) ? $_POST['username'] : ''; ?>">
+	<input type="text" id="username" name="username" value="<?php echo isset($_POST['username']) ? e($_POST['username']) : ''; ?>">
 	 <label for="password">Password:</label>
     <input type="password" id="password" name="password">
-	<input type="hidden" name="admin_token" value="<?php echo $_SESSION['admin_token']; ?>">
+	<?php echo csrf_field(); ?>
 	<input type="hidden" class="form-control" id="g-recaptcha-response" name="g-recaptcha-response">
     <input type="submit" name="submit" value="Login">
 	</form>
