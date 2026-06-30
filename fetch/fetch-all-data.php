@@ -54,7 +54,7 @@ function createTable($conn, $table_name) {
         
         $result = mysqli_query($conn, $create_table);
         if (!$result) {
-            die("Error creating table: " . mysqli_error($conn));
+            error_log('Stock platform fetch-all: create table failed: ' . mysqli_error($conn));
         }
     }
 }

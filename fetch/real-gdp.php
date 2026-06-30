@@ -30,7 +30,7 @@ if (mysqli_num_rows($table_check_result) == 0) {
 }
 
 // API key
-$api_key = "CHANGE-API-KEY-HERE";
+$api_key = isset($av_api_key) ? $av_api_key : '';   // configured once in db-config.php
 
 // API URL
 $url = "https://www.alphavantage.co/query?function=REAL_GDP&interval=quarterly&apikey=" . $api_key;
