@@ -177,7 +177,7 @@ $csrf_token = csrf_token();
 	}
 } ?>
 	<!-- Edit User Details -->
-	<form action="app/userdetails.php" id="detailsForm" method="post" style="display: none;">
+	<form action="app/userdetails.php" id="detailsForm" method="post" style="display: none;"><?php echo csrf_field(); ?>
 		<div>
 			<label for="full_name">Full Name:</label>
 			<input type="text" id="full_name" name="full_name" value="<?php echo $user['full_name']; ?>">
@@ -227,7 +227,7 @@ $csrf_token = csrf_token();
 			<!-- Delete Account --> 
 			<div id="removeAccount" style="display: none;">
 				<h3>Delete Account</h3>
-				<form action="app/delete-profile.php" method="post"><input class="btn btn-danger" type="submit" name="delAccount" value="Delete Account"></form>
+				<form action="app/delete-profile.php" method="post"><?php echo csrf_field(); ?><input class="btn btn-danger" type="submit" name="delAccount" value="Delete Account"></form>
 			</div>
 		</div>
 	<!-- END OF PAGE -->

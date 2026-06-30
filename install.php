@@ -1,10 +1,17 @@
 <?php
 session_start();
+
+// Refuse to run once configured (unless this is the step-2 continuation of a
+// fresh install in the same session). For security, DELETE this file after setup.
+$__config_path = __DIR__ . '/../app/db-config.php';
+if (file_exists($__config_path) && empty($_SESSION['installing'])) {
+    die('This application is already installed. To reinstall, remove app/db-config.php and delete install.php.');
+}
 ?>
 
 <h2>Step 1: Database Configuration</h2>
 <?php if (isset($error_message)): ?>
-<p style="color: red;"><?php echo $error_message; ?></p>
+<p style="color: red;"><?php echo htmlspecialchars($error_message); ?></p>
 <?php endif; ?>
 
 <form action="" method="post">
@@ -38,13 +45,13 @@ session_start();
 if (isset($_POST['submit_step1'])) {
 
     // Retrieve form data
-    $host = htmlspecialchars($_POST['db_host']);
-    $name = htmlspecialchars($_POST['db_name']);
-    $username = htmlspecialchars($_POST['db_username']);
-    $password = htmlspecialchars($_POST['db_password']);
-    $av_api_key = htmlspecialchars($_POST['av_api_key']);
-    $recaptcha_site_key = htmlspecialchars($_POST['recaptcha_site_key']);
-    $recaptcha_secret_key = htmlspecialchars($_POST['recaptcha_secret_key']);
+    $host = trim((string) ($_POST['db_host'] ?? ''));
+    $name = trim((string) ($_POST['db_name'] ?? ''));
+    $username = trim((string) ($_POST['db_username'] ?? ''));
+    $password = (string) ($_POST['db_password'] ?? '');
+    $av_api_key = trim((string) ($_POST['av_api_key'] ?? ''));
+    $recaptcha_site_key = trim((string) ($_POST['recaptcha_site_key'] ?? ''));
+    $recaptcha_secret_key = trim((string) ($_POST['recaptcha_secret_key'] ?? ''));
 
     // Validate form data
     if (!$host || !$name || !$username || !$password || !$av_api_key || !$recaptcha_site_key || !$recaptcha_secret_key) {
@@ -57,21 +64,24 @@ if (isset($_POST['submit_step1'])) {
 		
         // Write the configuration to a file
         $config_file = "<?php\n";
-        $config_file .= "\$db_host = '$host';\n";
-        $config_file .= "\$db_name = '$name';\n";
-        $config_file .= "\$db_username = '$username';\n";
-        $config_file .= "\$db_password = '$password';\n";
-        $config_file .= "\$av_api_key = '$av_api_key';\n";
-        $config_file .= "\$recaptcha_site_key = '$recaptcha_site_key';\n";
-        $config_file .= "\$recaptcha_secret_key = '$recaptcha_secret_key';\n";
+        $config_file .= "\$db_host = " . var_export($host, true) . ";\n";
+        $config_file .= "\$db_name = " . var_export($name, true) . ";\n";
+        $config_file .= "\$db_username = " . var_export($username, true) . ";\n";
+        $config_file .= "\$db_password = " . var_export($password, true) . ";\n";
+        $config_file .= "\$av_api_key = " . var_export($av_api_key, true) . ";\n";
+        $config_file .= "\$recaptcha_site_key = " . var_export($recaptcha_site_key, true) . ";\n";
+        $config_file .= "\$recaptcha_secret_key = " . var_export($recaptcha_secret_key, true) . ";\n";
         $config_file .= "?>";
 		
         //Saving our config file outside web root
-        file_put_contents('../app/db-config.php', $config_file);
-		
-        // Proceed to Step 2
-        header('Location: install.php?step=2');
-        exit;
+        if (file_exists($__config_path)) {
+            $error_message = 'Configuration already exists. Remove app/db-config.php to reinstall.';
+        } else {
+            file_put_contents($__config_path, $config_file);
+            $_SESSION['installing'] = true;
+            header('Location: install.php?step=2');
+            exit;
+        }
     }
 }
 
@@ -82,7 +92,7 @@ if (isset($_POST['submit_step1'])) {
 <h2>Step 2: Admin Account Creation</h2>
 
 <?php if (isset($error_message)): ?>
-<p style="color: red;"><?php echo $error_message; ?></p>
+<p style="color: red;"><?php echo htmlspecialchars($error_message); ?></p>
 <?php endif; ?>
 
 <form action="" method="post">
@@ -107,7 +117,8 @@ if (isset($_POST['submit_step1'])) {
     include '../app/db-config.php';
     $conn = mysqli_connect($db_host, $db_username, $db_password, $db_name);
     if (!$conn) {
-        $error_message = "Error connecting to the database: " . mysqli_connect_error();
+        error_log('Stock platform install step2: DB connection failed: ' . mysqli_connect_error());
+        $error_message = 'A database error occurred. Please try again later.';
     } else {
         // Create the admin-details table
         $table_sql = "CREATE TABLE admin_details (
@@ -120,9 +131,9 @@ if (isset($_POST['submit_step1'])) {
         mysqli_query($conn, $table_sql);
 
         // Retrieve form data
-        $username = htmlspecialchars($_POST['username']);
-        $password = htmlspecialchars($_POST['password']);
-        $email = htmlspecialchars($_POST['email']);
+        $username = trim((string) ($_POST['username'] ?? ''));
+        $password = (string) ($_POST['password'] ?? '');
+        $email = trim((string) ($_POST['email'] ?? ''));
         $role = "Admin";
 		
         // Validate form data
@@ -133,9 +144,10 @@ if (isset($_POST['submit_step1'])) {
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
             
             // Insert the admin account into the database
-            $insert_sql = "INSERT INTO admin_details (username, password, email, role)
-                VALUES ('$username', '$hashed_password', '$email', '$role')";
-            mysqli_query($conn, $insert_sql);
+            $insert_stmt = mysqli_prepare($conn, "INSERT INTO admin_details (username, password, email, role) VALUES (?, ?, ?, ?)");
+            mysqli_stmt_bind_param($insert_stmt, 'ssss', $username, $hashed_password, $email, $role);
+            mysqli_stmt_execute($insert_stmt);
+            mysqli_stmt_close($insert_stmt);
 
             // Send an email with the admin account details
             $to = $email;

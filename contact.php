@@ -1,5 +1,6 @@
 <?php
-session_start();
+require_once 'app/db-config.php';   // shared helpers (secure_session, csrf_field)
+secure_session();
 ?>
 
 <!DOCTYPE html>
@@ -67,6 +68,7 @@ session_start();
 		<h1>Contact us</h1>
 		<p>You can contact us with form below. </p>
 		<form id="contact-form" action="app/form-handler.php" method="post">
+			<?php echo csrf_field(); ?>
 		<div>
         <label for="inquiry">Inquiry:</label>
         <select id="inquiry" name="inquiry">
