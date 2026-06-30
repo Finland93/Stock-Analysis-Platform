@@ -52,12 +52,19 @@ foreach ($last_32_values as $value) {
     $inflation = $value["value"];
     $date = $value["date"];
 
-    $check_sql = "SELECT * FROM inflation_rate WHERE date = '$date'";
-    $check_result = mysqli_query($conn, $check_sql);
+    // date + value bound as parameters
+    if ($check = mysqli_prepare($conn, "SELECT 1 FROM inflation_rate WHERE date = ? LIMIT 1")) {
+        mysqli_stmt_bind_param($check, "s", $date);
+        mysqli_stmt_execute($check);
+        mysqli_stmt_store_result($check);
+        $exists = mysqli_stmt_num_rows($check) > 0;
+        mysqli_stmt_close($check);
 
-    if (mysqli_num_rows($check_result) == 0) {
-        $sql = "INSERT INTO inflation_rate (date, value) VALUES ('$date', $inflation)";
-        mysqli_query($conn, $sql);
+        if (!$exists && ($ins = mysqli_prepare($conn, "INSERT INTO inflation_rate (date, value) VALUES (?, ?)"))) {
+            mysqli_stmt_bind_param($ins, "sd", $date, $inflation);
+            mysqli_stmt_execute($ins);
+            mysqli_stmt_close($ins);
+        }
     }
 }
 

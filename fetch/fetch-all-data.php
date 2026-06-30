@@ -28,7 +28,8 @@ $conn = mysqli_connect($db_host, $db_username, $db_password, $db_name);
 
 // Check connection
 if (!$conn) {
-    die("Connection failed: " . mysqli_connect_error());
+    error_log('Stock platform fetch-all: DB connection failed: ' . mysqli_connect_error());
+    die('A database error occurred. Please try again later.');
 }
 
 // Function to create a table
@@ -60,27 +61,35 @@ function createTable($conn, $table_name) {
 
 // Function to insert data into a table
 function insertData($conn, $table_name, $row) {
-    $symbol = $row[0];
-    $name = $row[1];
+    $symbol    = $row[0];
+    $name      = $row[1];
     $assetType = $row[3];
-    $sector = "Sector"; 
-	$epsNumber = 0;
-	$market_cap = 0;
-    $peRatio = 0; 
-    $pbRatio = 0; 
-    $rsiAnalysis = 0; 
+    $sector    = "Sector";
+    $epsNumber = 0;
+    $market_cap = 0;
+    $peRatio = 0;
+    $pbRatio = 0;
+    $rsiAnalysis = 0;
     $processed = 0;
 
-    // Check if data already exists
-    $check_data = "SELECT * FROM $table_name WHERE symbol='$symbol' AND name='$name'";
-    $result = mysqli_query($conn, $check_data);
+    // Check if data already exists ($table_name is a hardcoded NYSE/NASDAQ value)
+    $exists = false;
+    if ($check = mysqli_prepare($conn, "SELECT 1 FROM $table_name WHERE symbol = ? AND name = ? LIMIT 1")) {
+        mysqli_stmt_bind_param($check, "ss", $symbol, $name);
+        mysqli_stmt_execute($check);
+        mysqli_stmt_store_result($check);
+        $exists = mysqli_stmt_num_rows($check) > 0;
+        mysqli_stmt_close($check);
+    }
 
-    if (mysqli_num_rows($result) == 0) {
-        $insert_data = "INSERT INTO $table_name (symbol, name, assetType, sector, market_cap, peRatio, pbRatio, eps, rsiAnalysis, processed) 
-		VALUES ('$symbol', '$name', '$assetType', '$sector', '$market_cap', '$peRatio', '$pbRatio', '$epsNumber', '$rsiAnalysis', '$processed')";
-             $result = mysqli_query($conn, $insert_data);
-        if (!$result) {
-            die("Error inserting data: " . mysqli_error($conn));
+    if (!$exists) {
+        $sql = "INSERT INTO $table_name (symbol, name, assetType, sector, market_cap, peRatio, pbRatio, eps, rsiAnalysis, processed) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        if ($insert = mysqli_prepare($conn, $sql)) {
+            mysqli_stmt_bind_param($insert, "ssssdddddi", $symbol, $name, $assetType, $sector, $market_cap, $peRatio, $pbRatio, $epsNumber, $rsiAnalysis, $processed);
+            if (!mysqli_stmt_execute($insert)) {
+                error_log("Stock platform fetch-all: insert failed: " . mysqli_stmt_error($insert));
+            }
+            mysqli_stmt_close($insert);
         }
     }
 }
@@ -88,27 +97,32 @@ function insertData($conn, $table_name, $row) {
 // Function to delete data from a table
 function deleteData($conn, $table_name, $rows) {
     $symbols = [];
-
-    // Create an array of symbols in the all-data.csv file
     foreach ($rows as $row) {
         if ($row[3] == 'Stock') {
-            array_push($symbols, $row[0]);
+            $symbols[] = $row[0];
         }
     }
 
-    // Check if a symbol exists in the database table but not in the all-data.csv file
-    $select_data = "SELECT symbol FROM $table_name";
-    $result = mysqli_query($conn, $select_data);
+    // Collect orphaned symbols first (do NOT delete while iterating the result set)
+    $to_delete = [];
+    if ($res = mysqli_query($conn, "SELECT symbol FROM $table_name")) {
+        while ($row = mysqli_fetch_assoc($res)) {
+            if (!in_array($row['symbol'], $symbols, true)) {
+                $to_delete[] = $row['symbol'];
+            }
+        }
+        mysqli_free_result($res);
+    }
 
-    if (mysqli_num_rows($result) > 0) {
-        while ($row = mysqli_fetch_assoc($result)) {
-            if (!in_array($row['symbol'], $symbols)) {
-                $delete_data = "DELETE FROM $table_name WHERE symbol='".$row['symbol']."'";
-                $result = mysqli_query($conn, $delete_data);
-                if (!$result) {
-                    die("Error deleting data: " . mysqli_error($conn));
+    if ($to_delete) {
+        if ($del = mysqli_prepare($conn, "DELETE FROM $table_name WHERE symbol = ?")) {
+            foreach ($to_delete as $sym) {
+                mysqli_stmt_bind_param($del, "s", $sym);
+                if (!mysqli_stmt_execute($del)) {
+                    error_log("Stock platform fetch-all: delete failed: " . mysqli_stmt_error($del));
                 }
             }
+            mysqli_stmt_close($del);
         }
     }
 }

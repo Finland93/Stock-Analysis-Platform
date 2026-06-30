@@ -52,12 +52,19 @@ foreach ($last_16_values as $value) {
     $gdp = $value["value"];
     $date = $value["date"];
 
-    $check_sql = "SELECT * FROM gdp_data WHERE date = '$date'";
-    $check_result = mysqli_query($conn, $check_sql);
+    // date + value bound as parameters
+    if ($check = mysqli_prepare($conn, "SELECT 1 FROM gdp_data WHERE date = ? LIMIT 1")) {
+        mysqli_stmt_bind_param($check, "s", $date);
+        mysqli_stmt_execute($check);
+        mysqli_stmt_store_result($check);
+        $exists = mysqli_stmt_num_rows($check) > 0;
+        mysqli_stmt_close($check);
 
-    if (mysqli_num_rows($check_result) == 0) {
-        $sql = "INSERT INTO gdp_data (date, value) VALUES ('$date', $gdp)";
-        mysqli_query($conn, $sql);
+        if (!$exists && ($ins = mysqli_prepare($conn, "INSERT INTO gdp_data (date, value) VALUES (?, ?)"))) {
+            mysqli_stmt_bind_param($ins, "sd", $date, $gdp);
+            mysqli_stmt_execute($ins);
+            mysqli_stmt_close($ins);
+        }
     }
 }
 

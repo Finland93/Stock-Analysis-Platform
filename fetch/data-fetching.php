@@ -17,7 +17,8 @@ $conn = mysqli_connect($db_host, $db_username, $db_password, $db_name);
 
 // Check the connection
 if (!$conn) {
-    die("Connection failed: " . mysqli_connect_error());
+    error_log('Stock platform data-fetching: DB connection failed: ' . mysqli_connect_error());
+    die('A database error occurred. Please try again later.');
 }
 
 
@@ -76,21 +77,25 @@ function fetchData($conn, $table) {
         // Decode the JSON data
         $overview_data = json_decode($overview_data, true);
 		
-		$MarketCap = $overview_data["MarketCapitalization"];
-		$sql = "UPDATE " . $table . " SET market_cap = '" . $MarketCap . "' WHERE symbol = '" . $symbol . "'";
-		mysqli_query($conn, $sql);
-        $Sector = $overview_data["Sector"];
-		$sql = "UPDATE " . $table . " SET sector = '" . $Sector . "', processed = 1 WHERE symbol = '" . $symbol . "'";
-		mysqli_query($conn, $sql);
-		$PERatio = $overview_data["PERatio"];
-		$sql = "UPDATE " . $table . " SET peRatio = '" . $PERatio . "' WHERE symbol = '" . $symbol . "'";
-		mysqli_query($conn, $sql);
-		$pbRatio = $overview_data["PriceToBookRatio"];
-		$sql = "UPDATE " . $table . " SET pbRatio = '" . $pbRatio . "' WHERE symbol = '" . $symbol . "'";
-		mysqli_query($conn, $sql);
-		$epsNumber = $overview_data["EPS"];
-		$sql = "UPDATE " . $table . " SET eps = '" . $epsNumber . "' WHERE symbol = '" . $symbol . "'";
-		mysqli_query($conn, $sql);
+		// $table is a fixed internal value (NYSE/NASDAQ); values + symbol are bound.
+		$apply = function ($col, $val) use ($conn, $table, $symbol) {
+			if ($stmt = mysqli_prepare($conn, "UPDATE $table SET $col = ? WHERE symbol = ?")) {
+				mysqli_stmt_bind_param($stmt, "ss", $val, $symbol);
+				mysqli_stmt_execute($stmt);
+				mysqli_stmt_close($stmt);
+			}
+		};
+		$apply("market_cap", $overview_data["MarketCapitalization"]);
+		$apply("peRatio",    $overview_data["PERatio"]);
+		$apply("pbRatio",    $overview_data["PriceToBookRatio"]);
+		$apply("eps",        $overview_data["EPS"]);
+
+		$Sector = $overview_data["Sector"];
+		if ($stmt = mysqli_prepare($conn, "UPDATE $table SET sector = ?, processed = 1 WHERE symbol = ?")) {
+			mysqli_stmt_bind_param($stmt, "ss", $Sector, $symbol);
+			mysqli_stmt_execute($stmt);
+			mysqli_stmt_close($stmt);
+		}
 		
         // Define the RSI Analyze URL
 		$rsi_analyze_url = "https://www.alphavantage.co/query?function=RSI&symbol=" . $symbol . "&interval=daily&time_period=14&series_type=open&apikey=" . $api_key;
@@ -105,8 +110,11 @@ function fetchData($conn, $table) {
 		$rsi = $rsi_data[$latest_date]["RSI"];
 
 		// Store the RSI data
-		$sql = "UPDATE " . $table . " SET rsiAnalysis = '" . $rsi . "' WHERE symbol = '" . $symbol . "'";
-		mysqli_query($conn, $sql);  
+		if ($stmt = mysqli_prepare($conn, "UPDATE $table SET rsiAnalysis = ? WHERE symbol = ?")) {
+			mysqli_stmt_bind_param($stmt, "ss", $rsi, $symbol);
+			mysqli_stmt_execute($stmt);
+			mysqli_stmt_close($stmt);
+		}
 		
     }
 	
