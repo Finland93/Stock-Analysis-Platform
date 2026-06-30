@@ -8,7 +8,8 @@ $conn = new mysqli($db_host, $db_username, $db_password, $db_name);
 
 	// Check the connection
 	if ($conn->connect_error) {
-		die("Error connecting to the database: " . $conn->connect_error);
+		error_log('Stock platform verify-deletion: DB connection failed: ' . $conn->connect_error);
+		die('A database error occurred. Please try again later.');
 	}
 
 	// Check if the user ID and verification code are provided
@@ -43,7 +44,8 @@ $conn = new mysqli($db_host, $db_username, $db_password, $db_name);
 	if ($stmt->affected_rows > 0) {
 	echo "User account deleted successfully";
 	} else {
-		echo "Error deleting user account: " . $stmt->error;
+		error_log('Stock platform verify-deletion: delete failed: ' . $stmt->error);
+		echo 'Could not delete the account. Please try again later.';
 	}
 
 	$stmt->close();

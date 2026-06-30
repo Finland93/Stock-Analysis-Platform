@@ -1,25 +1,20 @@
 <?php
-session_start();
+require_once '../../app/db-config.php';   // config + shared helpers
+secure_session();
 
-	// Check if the user is logged in and has a valid session token
-	if (!isset($_SESSION['user_token'])) {
-		die('Invalid user token');
-	}
-
-	// Check if the user ID is set in the session
 	if (!isset($_SESSION['user_id'])) {
-		die('User ID not found in session');
+		die('Not authorized.');
 	}
-
-	// Include database configuration file
-	require_once '../../app/db-config.php';
+	if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_verify($_POST['csrf_token'] ?? '')) {
+		die('Invalid or expired request. Please reload the page and try again.');
+	}
 
 	// Connect to the database
 	$conn = new mysqli($db_host, $db_username, $db_password, $db_name);
 
-	// Check the connection
 	if ($conn->connect_error) {
-		die("Error connecting to the database: " . $conn->connect_error);
+		error_log('Stock platform delete-profile: DB connection failed: ' . $conn->connect_error);
+		die('A database error occurred. Please try again later.');
 	}
 
 	// Get the user's email address

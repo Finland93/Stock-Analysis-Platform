@@ -1,14 +1,14 @@
 <?php
-session_start();
-  // Look for csrf token
-if (!isset($_SESSION['user_token'])) {
-  die('Invalid user token');
-} else {
-  
-  if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-	// Include database configuration file
-	require_once '../../app/db-config.php';
+require_once '../../app/db-config.php';   // config + shared helpers
+secure_session();
 
+if (!isset($_SESSION['user_id'])) {
+  die('Not authorized.');
+} else {
+  if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!csrf_verify($_POST['csrf_token'] ?? '')) {
+      die('Invalid or expired request. Please reload the page and try again.');
+    }
     // Connect to the database
     $conn = mysqli_connect($db_host, $db_username, $db_password, $db_name);
 
